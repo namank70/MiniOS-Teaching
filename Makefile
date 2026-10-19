@@ -16,6 +16,7 @@ KERNEL_DIR = kernel
 GUI_DIR = gui
 PYTHON_DIR = python
 ISO_DIR = $(BUILD_DIR)/isodir
+HOST_CFLAGS = -std=c11 -Wall -Wextra -Werror -pedantic -O2 -Iinclude
 
 # Output files
 BOOTLOADER = $(BUILD_DIR)/boot.bin
@@ -94,6 +95,14 @@ $(OS_IMAGE): $(BOOTLOADER) $(KERNEL) | $(BUILD_DIR)
 
 # Build simulators (no NASM needed)
 simulator: minios_gui minios_simulator
+
+.PHONY: test-mock-provider
+test-mock-provider:
+	@tmpdir=$$(mktemp -d); \
+	trap 'rm -rf "$$tmpdir"' EXIT; \
+	$(CC) $(HOST_CFLAGS) src/shared/mock_provider.c \
+		tests/unit/mock_provider_test.c -o "$$tmpdir/mock_provider_test"; \
+	"$$tmpdir/mock_provider_test"
 
 minios_gui: minios_gui.c
 	@echo "Building CarPlay-style GUI simulator..."
