@@ -1,0 +1,23 @@
+name: Teaching kernel and shell
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  build-and-boot:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - name: Build Linux toolchain
+        run: docker build --platform linux/amd64 -t minios-teaching:local -f tools/teaching/Dockerfile tools/teaching
+      - name: Test both contributions and boot the ISO
+        run: ./tools/teaching.sh test-teaching
+      - name: Show kernel transcript
+        if: always()
+        run: |
+          if test -f build/teaching/shell-smoke.log; then cat build/teaching/shell-smoke.log; fi
+          if test -f build/teaching/qemu-stderr.log; then cat build/teaching/qemu-stderr.log; fi
