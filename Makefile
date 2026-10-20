@@ -96,13 +96,22 @@ $(OS_IMAGE): $(BOOTLOADER) $(KERNEL) | $(BUILD_DIR)
 # Build simulators (no NASM needed)
 simulator: minios_gui minios_simulator
 
-.PHONY: test-mock-provider
+.PHONY: test-mock-provider test-suggestion-policy
 test-mock-provider:
 	@tmpdir=$$(mktemp -d); \
 	trap 'rm -rf "$$tmpdir"' EXIT; \
 	$(CC) $(HOST_CFLAGS) src/shared/mock_provider.c \
 		tests/unit/mock_provider_test.c -o "$$tmpdir/mock_provider_test"; \
 	"$$tmpdir/mock_provider_test"
+
+test-suggestion-policy:
+	@tmpdir=$$(mktemp -d); \
+	trap 'rm -rf "$$tmpdir"' EXIT; \
+	$(CC) $(HOST_CFLAGS) src/shared/mock_provider.c \
+		src/shared/suggestion_policy.c \
+		tests/unit/suggestion_policy_test.c \
+		-o "$$tmpdir/suggestion_policy_test"; \
+	"$$tmpdir/suggestion_policy_test"
 
 minios_gui: minios_gui.c
 	@echo "Building CarPlay-style GUI simulator..."
