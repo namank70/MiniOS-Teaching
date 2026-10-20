@@ -1,0 +1,13 @@
+{
+  "format_version": 1,
+  "start_minute_of_day": 1440,
+  "model_version": 1,
+  "initial_context": {
+    "zone": "ROAD",
+    "fuel_percent": 80,
+    "idle_minutes": 30,
+    "seq": 0
+  },
+  "events": [],
+  "expected_events": []
+}

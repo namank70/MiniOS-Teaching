@@ -96,7 +96,8 @@ $(OS_IMAGE): $(BOOTLOADER) $(KERNEL) | $(BUILD_DIR)
 # Build simulators (no NASM needed)
 simulator: minios_gui minios_simulator
 
-.PHONY: test-mock-provider test-suggestion-policy
+.PHONY: test-mock-provider test-suggestion-policy test-scenarios \
+	test-person-b scenario
 test-mock-provider:
 	@tmpdir=$$(mktemp -d); \
 	trap 'rm -rf "$$tmpdir"' EXIT; \
@@ -112,6 +113,29 @@ test-suggestion-policy:
 		tests/unit/suggestion_policy_test.c \
 		-o "$$tmpdir/suggestion_policy_test"; \
 	"$$tmpdir/suggestion_policy_test"
+
+scenario:
+	@test -n "$(SCENARIO)" || { echo "Usage: make scenario SCENARIO=tests/scenarios/refuel.json" >&2; exit 2; }
+	@tmpdir=$$(mktemp -d); \
+	trap 'rm -rf "$$tmpdir"' EXIT; \
+	$(CC) $(HOST_CFLAGS) -fPIC -shared \
+		src/shared/mock_provider.c src/shared/suggestion_policy.c \
+		src/shared/scenario_adapter.c -o "$$tmpdir/libminios_scenario.so"; \
+	python3 tools/minios_scenario.py "$(SCENARIO)" --check \
+		--library "$$tmpdir/libminios_scenario.so"
+
+test-scenarios:
+	@tmpdir=$$(mktemp -d); \
+	trap 'rm -rf "$$tmpdir"' EXIT; \
+	$(CC) $(HOST_CFLAGS) -fPIC -shared \
+		src/shared/mock_provider.c src/shared/suggestion_policy.c \
+		src/shared/scenario_adapter.c -o "$$tmpdir/libminios_scenario.so"; \
+	python3 tests/scenarios/run_scenario_tests.py \
+		"$(CURDIR)/tools/minios_scenario.py" \
+		"$$tmpdir/libminios_scenario.so" \
+		"$(CURDIR)/tests/scenarios"
+
+test-person-b: test-mock-provider test-suggestion-policy test-scenarios
 
 minios_gui: minios_gui.c
 	@echo "Building CarPlay-style GUI simulator..."
