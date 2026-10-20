@@ -34,6 +34,19 @@ static int history_contains(
     return 0;
 }
 
+static int contexts_equal(
+    const MiniOSContext *left,
+    const MiniOSContext *right)
+{
+    return left->version == right->version &&
+           left->now_ms == right->now_ms &&
+           left->minute_of_day == right->minute_of_day &&
+           left->zone == right->zone &&
+           left->fuel_percent == right->fuel_percent &&
+           left->idle_minutes == right->idle_minutes &&
+           left->input_sequence == right->input_sequence;
+}
+
 static void commit_context(
     MiniOSSuggestionPolicy *policy,
     const MiniOSContext *context,
@@ -76,8 +89,7 @@ MiniOSPolicyStatus minios_policy_evaluate(
     }
 
     if (policy->has_pending) {
-        if (context->now_ms == policy->pending_context.now_ms &&
-            context->input_sequence == policy->pending_context.input_sequence) {
+        if (contexts_equal(context, &policy->pending_context)) {
             *event = policy->pending_event;
             return MINIOS_POLICY_EVENT_READY;
         }

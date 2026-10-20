@@ -97,7 +97,7 @@ $(OS_IMAGE): $(BOOTLOADER) $(KERNEL) | $(BUILD_DIR)
 simulator: minios_gui minios_simulator
 
 .PHONY: test-mock-provider test-suggestion-policy test-scenarios \
-	test-person-b scenario
+	test-shell test-person-b scenario
 test-mock-provider:
 	@tmpdir=$$(mktemp -d); \
 	trap 'rm -rf "$$tmpdir"' EXIT; \
@@ -113,6 +113,14 @@ test-suggestion-policy:
 		tests/unit/suggestion_policy_test.c \
 		-o "$$tmpdir/suggestion_policy_test"; \
 	"$$tmpdir/suggestion_policy_test"
+
+test-shell:
+	@tmpdir=$$(mktemp -d); \
+	trap 'rm -rf "$$tmpdir"' EXIT; \
+	$(CC) $(HOST_CFLAGS) src/shared/mock_provider.c \
+		src/shared/shell.c tests/unit/shell_test.c \
+		-o "$$tmpdir/shell_test"; \
+	"$$tmpdir/shell_test"
 
 scenario:
 	@test -n "$(SCENARIO)" || { echo "Usage: make scenario SCENARIO=tests/scenarios/refuel.json" >&2; exit 2; }
@@ -135,7 +143,7 @@ test-scenarios:
 		"$$tmpdir/libminios_scenario.so" \
 		"$(CURDIR)/tests/scenarios"
 
-test-person-b: test-mock-provider test-suggestion-policy test-scenarios
+test-person-b: test-mock-provider test-suggestion-policy test-scenarios test-shell
 
 minios_gui: minios_gui.c
 	@echo "Building CarPlay-style GUI simulator..."

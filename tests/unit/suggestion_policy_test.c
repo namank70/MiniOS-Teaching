@@ -72,6 +72,11 @@ static void test_initial_zone_trigger_and_dedup(void)
     check(event.suggestion == repeated.suggestion &&
               event.input_sequence == repeated.input_sequence,
           "pending event retry is byte-semantically stable");
+    context.fuel_percent = 90u;
+    check(minios_policy_evaluate(&policy, &context, &model, &repeated) ==
+              MINIOS_POLICY_PENDING,
+          "changed context cannot reuse an event pending for an earlier input");
+    context.fuel_percent = 10u;
     check(minios_policy_commit(&policy, 1u) == MINIOS_POLICY_EVENT_READY,
           "accepted event can be committed");
     check(minios_policy_evaluate(&policy, &context, &model, &repeated) ==
@@ -92,7 +97,7 @@ static void test_half_hour_and_idle_gate(void)
               MINIOS_POLICY_NO_SUGGESTION,
           "initial road context is evaluated but emits no suggestion");
 
-    context = make_context(UINT64_C(1799000), 2u,
+    context = make_context(UINT64_C(1799999), 2u,
                            MINIOS_ZONE_ROAD, 80u, 30u);
     check(minios_policy_evaluate(&policy, &context, &model, &event) ==
               MINIOS_POLICY_NO_TRIGGER,
