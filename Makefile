@@ -397,3 +397,6 @@ help:
 	@echo "  Custom bootloader: nasm, gcc, qemu"
 
 .PHONY: all clean run debug simulator help check-tools run-gui run-sim
+
+# Additive teaching kernel; original targets above are preserved.
+include kernel/teaching/Makefile.inc
