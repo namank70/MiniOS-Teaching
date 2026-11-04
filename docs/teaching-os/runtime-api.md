@@ -29,6 +29,12 @@ Naman's policy stays owned by the recommendation task. It posts a copy of each r
 
 ## Future changes
 
+The added finite-work API is documented in [kernel-shared-progress.md](kernel-shared-progress.md).
+It uses separate headers (`task_updates.h` and `kernel_work.h`) and actor IDs 5/6
+for two demo workers. The legacy heartbeat records above remain unchanged.
+`progress` now prints both sets of snapshots; `work`, `work-pause`, `updates`,
+and `watch` demonstrate ordered updates and final results.
+
 The shell's `suggest` command remains Naman's fixed fixture; it does not silently change to live state. The scheduled path already uses the shared region model. Commands can read `minios_runtime_model`, `minios_progress_snapshot`, and `scheduler_snapshot` without writing platform globals. Any future live-context or richer progress integration should preserve these ownership boundaries and agree an ABI change first.
 
 No claim is made that mappings survive exec: there is no exec in this kernel. Automatic host-process reattachment is deferred by the agreed shell-first scope.

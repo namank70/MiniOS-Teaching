@@ -1,7 +1,7 @@
 #ifndef TEACHING_SCHEDULER_H
 #define TEACHING_SCHEDULER_H
 #include "minios/task_policy.h"
-#define NUM_TASKS 4u
+#define NUM_TASKS 6u
 #define TASK_STACK_SZ 8192u
 typedef void (*TaskEntry)(void);
 typedef struct {
@@ -22,6 +22,7 @@ void task_yield(void);
 void task_idle(void);
 uint32_t scheduler_tick_now(void);
 uint64_t scheduler_now_ms(void);
+uint32_t scheduler_current_task(void);
 void scheduler_snapshot(TaskSnapshot out[NUM_TASKS]);
 void switch_context(Task *prev, Task *next);
 void isr_pit(void);

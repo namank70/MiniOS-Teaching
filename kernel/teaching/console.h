@@ -5,6 +5,8 @@ void console_init(void);
 void console_putc(char c);
 void console_write(const char *text);
 void console_uint(uint32_t value);
+void console_uint64(uint64_t value);
+void console_int64(int64_t value);
 /* Nonblocking: COM1 serial first, then PS/2 keyboard. Returns -1 if empty. */
 int console_read(void);
 #endif
