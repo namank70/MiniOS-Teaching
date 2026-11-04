@@ -1,0 +1,5 @@
+# Existing tracked research/demo artifacts are retained.
+/build/teaching/
+/build/host/
+__pycache__/
+*.pyc

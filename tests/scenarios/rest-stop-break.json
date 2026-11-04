@@ -1,0 +1,31 @@
+{
+  "format_version": 1,
+  "start_minute_of_day": 720,
+  "model_version": 1,
+  "initial_context": {
+    "zone": "REST_STOP",
+    "fuel_percent": 80,
+    "idle_minutes": 29,
+    "seq": 0
+  },
+  "events": [
+    {
+      "at_ms": 1800000,
+      "seq": 1,
+      "op": "context",
+      "zone": "REST_STOP",
+      "fuel_percent": 80,
+      "idle_minutes": 30
+    }
+  ],
+  "expected_events": [
+    {
+      "type": "SUGGESTION",
+      "actor": 3,
+      "at_ms": 1800000,
+      "seq": 1,
+      "model_version": 1,
+      "suggestion": "TAKE_BREAK"
+    }
+  ]
+}

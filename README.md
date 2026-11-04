@@ -1,3 +1,28 @@
+# MiniOS Teaching — integrated kernel shell
+
+Run the actual bootable shell (Docker must be running):
+
+```sh
+./tools/teaching.sh run-teaching
+```
+
+Verify both contributions and boot/input behavior:
+
+```sh
+./tools/teaching.sh test-teaching
+```
+
+Use `help`, `status`, `tasks`, `progress`, `suggest`, and `test`. A scheduled mock recommendation also appears without a command. Exit QEMU with Ctrl-a then x.
+
+- [Build, run, architecture, and limitations](docs/teaching-os/kernel-shell.md)
+- [Person A handoff and entry points](docs/teaching-os/person-a-handoff.md)
+- [Region/progress API contract](docs/teaching-os/runtime-api.md)
+- [Source provenance](docs/teaching-os/provenance.md)
+
+The original kernels, graphical demos, SNN model/training work, and their build targets are preserved below. The new teaching target is separate and uses a deterministic mock provider.
+
+---
+
 # MiniOS - Neuromorphic AI Operating System
 
 A custom bootable operating system with integrated Spiking Neural Network (SNN) for proactive activity suggestions.

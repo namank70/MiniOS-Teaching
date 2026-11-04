@@ -1,0 +1,39 @@
+{
+  "format_version": 1,
+  "start_minute_of_day": 750,
+  "model_version": 1,
+  "initial_context": {
+    "zone": "ROAD",
+    "fuel_percent": 80,
+    "idle_minutes": 30,
+    "seq": 0
+  },
+  "events": [
+    {
+      "at_ms": 0,
+      "seq": 1,
+      "op": "context",
+      "zone": "STATION",
+      "fuel_percent": 10,
+      "idle_minutes": 30
+    },
+    {
+      "at_ms": 0,
+      "seq": 1,
+      "op": "context",
+      "zone": "STATION",
+      "fuel_percent": 10,
+      "idle_minutes": 30
+    }
+  ],
+  "expected_events": [
+    {
+      "type": "SUGGESTION",
+      "actor": 3,
+      "at_ms": 0,
+      "seq": 1,
+      "model_version": 1,
+      "suggestion": "REFUEL"
+    }
+  ]
+}

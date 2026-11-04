@@ -13,3 +13,7 @@ Scheduler branch references (not merged):
 
 Status: Original main history pushed as the starting baseline.
 No donor scheduler branches have been merged.
+
+## Person A shell integration
+
+The Person A branch is based on Person B commit `8af8f36cabaefab3a776fbf54e0423b7f0e77312`. It adds a separate `teaching-iso` target, a kernel shell adapter, serial/PS2 console hooks, and a corrected adaptation of the scheduler ABI donor. No donor branch was merged wholesale; see `docs/teaching-os/provenance.md` for the selective source reuse and `docs/teaching-os/person-a-handoff.md` for runtime entry points. Original main targets and research sources are retained.
