@@ -14,9 +14,15 @@ Verify both contributions and boot/input behavior:
 
 Use `help`, `status`, `tasks`, `progress`, `suggest`, and `test`. A scheduled mock recommendation also appears without a command. Exit QEMU with Ctrl-a then x.
 
+Use `work` to run two scheduled kernel workers over the shared model and observe
+their progress and final results. `work-pause`, `updates`, and `watch` demonstrate
+a bounded history that waits when full. These are shared-state kernel tasks,
+not separate processes.
+
 - [Build, run, architecture, and limitations](docs/teaching-os/kernel-shell.md)
 - [Person A handoff and entry points](docs/teaching-os/person-a-handoff.md)
 - [Region/progress API contract](docs/teaching-os/runtime-api.md)
+- [Shared worker progress: demo, API, tests, and limits](docs/teaching-os/kernel-shared-progress.md)
 - [Source provenance](docs/teaching-os/provenance.md)
 
 The original kernels, graphical demos, SNN model/training work, and their build targets are preserved below. The new teaching target is separate and uses a deterministic mock provider.

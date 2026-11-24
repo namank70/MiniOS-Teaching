@@ -1,8 +1,10 @@
 #include "console.h"
 #include "scheduler.h"
 #include "platform.h"
+#include "shared_work.h"
 #include "string.h"
 #include "minios/runtime.h"
+#include "minios/kernel_work.h"
 #include "minios/shell.h"
 #include "minios/suggestion_policy.h"
 
@@ -71,13 +73,19 @@ static void execute(char *line) {
     size_t n=0; while(start[n]) n++;
     while(n && (start[n-1]==' ' || start[n-1]=='\t')) start[--n]=0;
     if(!strcmp(start,"tasks")) { print_tasks(); return; }
-    if(!strcmp(start,"progress")) { print_progress(); return; }
+    if(!strcmp(start,"progress")) { print_progress(); shared_work_progress(); return; }
+    if(shared_work_command(start)) return;
     MiniOSShellStatus rc=minios_shell_execute(start,shell_write,NULL);
     if(rc==MINIOS_SHELL_LINE_TOO_LONG) console_write("Error: line too long (64 max)\n");
-    if(!strcmp(start,"help")) console_write("  tasks    Show kernel task snapshots\n  progress Show shared progress snapshots\n");
+    if(!strcmp(start,"help")) console_write("  tasks    Show kernel task snapshots\n  progress Show shared progress snapshots\n"
+        "  work     Start two scheduled workers and observe updates\n"
+        "  work-pause Start workers with observation paused\n"
+        "  updates  Consume up to 32 committed work updates\n"
+        "  watch    Resume automatic work observation\n");
     if(!strcmp(start,"status")) {
         console_write("Kernel: i686; PIT ticks="); console_uint(scheduler_tick_now());
-        console_write("; tasks=4; model_bytes=262144\nConsole: COM1 + PS/2; provider: deterministic mock\n");
+        console_write("; tasks="); console_uint(NUM_TASKS);
+        console_write("; model_bytes=262144\nConsole: COM1 + PS/2; provider: deterministic mock\n");
     }
     if(!strcmp(start,"test")) kernel_check();
 }
@@ -86,6 +94,10 @@ static void shell_task(void) {
     int overflow=0,last_cr=0,escape=0; uint32_t loops=0;
     console_write("MiniOS Teaching kernel shell\nType help. Serial: Ctrl-a x exits QEMU.\nminios> ");
     for(;;) {
+        if(shared_work_observe()) {
+            console_write("minios> ");
+            for(size_t i=0;i<used;i++) console_putc(line[i]);
+        }
         MiniOSSuggestionEvent event;
         while(take_event(&event)) {
             console_write("\n[proactive] ");
@@ -141,6 +153,7 @@ void kernel_main(uint32_t magic,uint32_t info) {
     if(magic!=0x2badb002) { console_write("PANIC: invalid multiboot magic\n"); return; }
     console_write("BOOT: MiniOS teaching i686\n");
     minios_runtime_init();
-    const TaskEntry entries[NUM_TASKS]={shell_task,recommendation_task,runtime_task,task_idle};
+    minios_kernel_work_init();
+    const TaskEntry entries[NUM_TASKS]={shell_task,recommendation_task,runtime_task,shared_worker_a,shared_worker_b,task_idle};
     scheduler_init(entries); scheduler_start();
 }

@@ -47,6 +47,15 @@ void console_uint(uint32_t v) {
     do { digits[n++]=(char)('0'+v%10); v/=10; } while(v);
     while(n) console_putc(digits[--n]);
 }
+void console_uint64(uint64_t v) {
+    char digits[20]; unsigned n=0;
+    do { digits[n++]=(char)('0'+v%10); v/=10; } while(v);
+    while(n) console_putc(digits[--n]);
+}
+void console_int64(int64_t v) {
+    if(v<0) { console_putc('-'); console_uint64(UINT64_C(0)-(uint64_t)v); }
+    else console_uint64((uint64_t)v);
+}
 int console_read(void) {
     if (inb(0x3fd)&1) return inb(0x3f8);
     uint8_t status=inb(0x64);

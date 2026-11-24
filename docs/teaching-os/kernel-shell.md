@@ -1,6 +1,6 @@
 # Bootable teaching shell
 
-This branch connects Naman's existing dispatcher, deterministic mock provider, and suggestion policy to an actual 32-bit MiniOS kernel. The kernel boots through GRUB, runs four preemptively scheduled ring-0 tasks, and accepts input over COM1 or a PS/2 keyboard. No host program executes the shell commands on its behalf.
+This branch connects Naman's existing dispatcher, deterministic mock provider, and suggestion policy to an actual 32-bit MiniOS kernel. The kernel boots through GRUB, runs six preemptively scheduled ring-0 tasks, and accepts input over COM1 or a PS/2 keyboard. No host program executes the shell commands on its behalf.
 
 ## Run on macOS, Windows with Docker Desktop, or Linux with Docker
 
@@ -34,12 +34,19 @@ This is deliberately a fixed teaching scenario: station, fuel 10%, idle calendar
 
 | Command | Behavior |
 |---|---|
-| `help` | Naman's command list plus kernel `tasks` and `progress` extensions |
+| `help` | Naman's command list plus kernel task/progress/work extensions |
 | `status` | Mock version plus actual kernel tick count, task count, region size, and console configuration |
 | `suggest` | Naman's original fixed-context recommendation using its small local model fixture |
 | `test` | Naman's provider check, then real kernel region/policy and timer/sleep checks using isolated test state |
 | `tasks` | Current task IDs, states, priorities, and dispatch counts |
-| `progress` | Committed runtime activity counters and heartbeat snapshots |
+| `progress` | Runtime heartbeat snapshots, worker progress/results, and history occupancy |
+| `work` | Start two scheduled workers and observe their ordered progress/results |
+| `work-pause` | Start a run with observation paused to demonstrate a full history |
+| `updates` | Consume and print up to 32 pending work updates |
+| `watch` | Resume automatic work observation |
+
+See [the shared-progress demo and API](kernel-shared-progress.md) for expected
+results, exact tests, full-history behavior, and differences from the host prototype.
 
 Input is limited to 64 characters. Backspace/Delete edit the current line; Ctrl-C cancels it. Empty lines return to the prompt. Once a line overflows, its entire contents are discarded at Enter, even if characters are subsequently deleted. CR/LF and CRLF are accepted. Unknown commands and arguments have explicit errors. Arrow-key escape sequences are ignored; history and completion are not implemented.
 
@@ -70,7 +77,9 @@ The Docker terminal path needs no display server and is the recommended demonstr
 | `kernel/teaching/boot.asm` | Multiboot header, owned flat GDT, boot stack, call to `kernel_main` |
 | `kernel/teaching/kernel.c` | `kernel_main`, shell loop/output callback, task setup, scheduled mock scenario, bounded notification queue |
 | `kernel/teaching/console.h` and `.c` | Kernel-safe `console_read`, `console_write`, serial, PS/2, and VGA text primitives |
-| `kernel/teaching/scheduler.h` and `.c` | Four tasks, stacks, PIT/PIC/IDT, task sleep, time, consistent status snapshots |
+| `kernel/teaching/scheduler.h` and `.c` | Six tasks, stacks, PIT/PIC/IDT, task sleep, time, consistent status snapshots |
+| `kernel/teaching/shared_work.c` | Two row-sum workers and shell observer commands |
+| `src/shared/task_updates.c`, `src/platform/kernel/task_updates.c` | Ordered work history, validation, snapshots and kernel synchronization |
 | `kernel/teaching/scheduler.asm` | Context switch and interrupt/exception entry, adapted from the scheduler donor |
 | `src/shared/task_policy.c` | Host-tested runnable selection and wrap-safe waking |
 | `src/shared/shell.c` | Naman's original dispatcher, linked unchanged |
@@ -79,11 +88,11 @@ The Docker terminal path needs no display server and is the recommended demonstr
 | `kernel/teaching/string.c` | Minimal freestanding string/memory primitives required by shared code |
 | `kernel/teaching/Makefile.inc` | Separate source build and test targets |
 
-Flow: GRUB → `_start` → `kernel_main` → initialize model/progress and scheduler → shell/recommendation/runtime/idle tasks. The shell executes `minios_shell_execute(line, shell_write, NULL)` for Naman's commands. `shell_write` sends strings to `console_write`.
+Flow: GRUB → `_start` → `kernel_main` → initialize model/progress and scheduler → shell/recommendation/runtime/worker-a/worker-b/idle tasks. The shell executes `minios_shell_execute(line, shell_write, NULL)` for Naman's commands. `shell_write` sends strings to `console_write`.
 
 ## Scheduling contract
 
-Task IDs 0–3 are shell, recommendation, runtime, idle, respectively. Lower numeric priority wins. A currently RUNNING task remains eligible; yielding cannot bypass higher-priority runnable work. The shell sleeps for five ticks between bounded input slices; the recommendation task sleeps for 100; the runtime task sleeps for 250. The idle task executes `hlt`.
+Task IDs 0–5 are shell, recommendation, runtime, worker-a, worker-b, idle, respectively. Adding two workers moves idle from ID 3 to ID 5; the original service IDs stay unchanged. Lower numeric priority wins. A currently RUNNING task remains eligible; yielding cannot bypass higher-priority runnable work. The shell sleeps for five ticks between bounded input slices; the recommendation task sleeps for 100; the runtime task sleeps for 250; the two workers sleep for 20 between work units or retries. The idle task executes `hlt`.
 
 Only PIT IRQ0 advances tick/uptime state. PIT divisor 1193 gives approximately 1000 ticks per second, so ticks are nominal milliseconds, not a precise wall clock. Zero-delay sleep behaves as yield; sleeps of `2^31` ticks or greater are unsupported and also behave as yield. Wake comparisons support uint32 wraparound for shorter delays.
 
@@ -95,7 +104,7 @@ All dispatch paths run with interrupts disabled. The PIC is acknowledged before 
 ./tools/teaching.sh test-teaching
 ```
 
-This runs the entire Person B suite, scheduler/region tests, and a QEMU test of the freshly built ISO. QEMU checks boot, commands, autonomous recommendation, all task dispatches, timer/sleep checks, bad/overlong input, editing, a PS/2 command injected via QMP, and duplicate suppression. Bounded timeouts fail instead of hanging. The transcript is saved to `build/teaching/shell-smoke.log`; diagnostics go to `build/teaching/qemu-stderr.log`.
+This runs the entire Person B suite, scheduler/region tests, shared-work API tests, and a QEMU test of the freshly built ISO. QEMU checks boot, commands, autonomous recommendation, all task dispatches, timer/sleep checks, bad/overlong input, editing, a PS/2 command injected via QMP, duplicate suppression, repeatable worker results, and full-history recovery. Bounded timeouts fail instead of hanging. The transcript is saved to `build/teaching/shell-smoke.log`; diagnostics go to `build/teaching/qemu-stderr.log`.
 
 The tests use real serial sockets and emulated keyboard hardware. Portable tests separately cover model/policy behavior and wraparound. The Python JSON scenario runner remains host-side; it is not advertised as a kernel command.
 

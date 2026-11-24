@@ -1,5 +1,10 @@
 # Person A handoff — kernel shell integration
 
+This document records the initial shell integration (PR #1). For the subsequent
+kernel shared-progress work, use [the current demo/API handoff](kernel-shared-progress.md),
+which covers two additional worker tasks, ordered events, results, tests, and
+the additive boundary with the Linux host prototype.
+
 ## What is runnable
 
 The teaching ISO boots to a real text shell. Serial input/output and PS/2 keyboard input are wired. Naman's `help`, `status`, `suggest`, and `test` dispatcher is linked unchanged. Kernel adapters add `tasks`, `progress`, actual status, and kernel self-checks. A scheduled task independently publishes a mock recommendation after approximately two seconds.

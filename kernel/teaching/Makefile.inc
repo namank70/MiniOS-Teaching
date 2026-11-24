@@ -9,7 +9,8 @@ TEACHING_CFLAGS := -std=c11 -m32 -ffreestanding -fno-builtin -fno-pie -fno-pic \
 TEACHING_C := kernel/teaching/kernel.c kernel/teaching/console.c \
  kernel/teaching/scheduler.c kernel/teaching/string.c src/shared/shell.c \
  src/shared/mock_provider.c src/shared/suggestion_policy.c src/shared/task_policy.c \
- src/shared/region_bounds.c src/platform/kernel/runtime.c
+ src/shared/region_bounds.c src/platform/kernel/runtime.c \
+ src/shared/task_updates.c src/platform/kernel/task_updates.c kernel/teaching/shared_work.c
 TEACHING_OBJECTS := $(patsubst %.c,$(TEACHING_DIR)/%.o,$(TEACHING_C)) \
  $(TEACHING_DIR)/boot.o $(TEACHING_DIR)/switch.o
 
@@ -44,7 +45,12 @@ $(TEACHING_DIR)/task-policy-test: tests/unit/task_policy_test.c src/shared/task_
 $(TEACHING_DIR)/region-test: tests/unit/region_bounds_test.c src/shared/region_bounds.c include/minios/runtime.h
 	mkdir -p $(dir $@)
 	$(CC) $(HOST_CFLAGS) tests/unit/region_bounds_test.c src/shared/region_bounds.c -o $@
-test-person-a: $(TEACHING_DIR)/task-policy-test $(TEACHING_DIR)/region-test
+$(TEACHING_DIR)/work-updates-test: tests/unit/task_updates_test.c src/shared/task_updates.c include/minios/task_updates.h
+	mkdir -p $(dir $@)
+	$(CC) $(HOST_CFLAGS) tests/unit/task_updates_test.c src/shared/task_updates.c -o $@
+test-work-updates: $(TEACHING_DIR)/work-updates-test
+	./$(TEACHING_DIR)/work-updates-test
+test-person-a: $(TEACHING_DIR)/task-policy-test $(TEACHING_DIR)/region-test test-work-updates
 	./$(TEACHING_DIR)/task-policy-test
 	./$(TEACHING_DIR)/region-test
 test-qemu: teaching-iso
@@ -52,4 +58,4 @@ test-qemu: teaching-iso
 test-teaching: test-person-b test-person-a test-qemu
 
 -include $(patsubst %.o,%.d,$(filter %.o,$(TEACHING_OBJECTS)))
-.PHONY: teaching-kernel teaching-iso run-teaching test-person-a test-qemu test-teaching
+.PHONY: teaching-kernel teaching-iso run-teaching test-person-a test-work-updates test-qemu test-teaching

@@ -1,5 +1,5 @@
 /* Adapted from External-Scheduler-ABI at 785d989 (see provenance.md).
- * The switch ABI/four fixed-priority tasks are retained. Timer advancement,
+ * The switch ABI/fixed-priority policy are retained. Timer advancement,
  * runnable selection, IRQ serialization and bootstrap ownership are corrected. */
 #include "scheduler.h"
 #include "platform.h"
@@ -46,7 +46,7 @@ static void task_bootstrap(void) {
     kernel_exception(255,1); /* task entries must not return */
 }
 void scheduler_init(const TaskEntry entries[NUM_TASKS]) {
-    static const char *names[]={"shell","recommendation","runtime","idle"};
+    static const char *names[]={"shell","recommendation","runtime","worker-a","worker-b","idle"};
     for(unsigned i=0;i<NUM_TASKS;i++) {
         uint32_t *sp=(uint32_t *)(stacks[i]+TASK_STACK_SZ);
         *--sp=(uint32_t)task_bootstrap;
@@ -89,6 +89,7 @@ void task_yield(void) { uint32_t f=irq_save(); dispatch(); irq_restore(f); }
 void task_idle(void) { for(;;) __asm__ volatile("hlt"); }
 uint32_t scheduler_tick_now(void) { uint32_t f=irq_save(), n=ticks; irq_restore(f); return n; }
 uint64_t scheduler_now_ms(void) { uint32_t f=irq_save(); uint64_t n=uptime; irq_restore(f); return n; }
+uint32_t scheduler_current_task(void) { uint32_t f=irq_save(), n=current; irq_restore(f); return n; }
 void scheduler_snapshot(TaskSnapshot out[NUM_TASKS]) {
     uint32_t f=irq_save();
     for(unsigned i=0;i<NUM_TASKS;i++) out[i]=(TaskSnapshot){i,policy[i].state,policy[i].priority,policy[i].wake_tick,tasks[i].switches,tasks[i].name};
