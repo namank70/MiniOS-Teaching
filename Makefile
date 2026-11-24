@@ -97,7 +97,7 @@ $(OS_IMAGE): $(BOOTLOADER) $(KERNEL) | $(BUILD_DIR)
 simulator: minios_gui minios_simulator
 
 .PHONY: test-mock-provider test-suggestion-policy test-scenarios \
-	test-shell test-person-b scenario
+	test-shell test-process-regions demo-process-regions test-person-b scenario
 test-mock-provider:
 	@tmpdir=$$(mktemp -d); \
 	trap 'rm -rf "$$tmpdir"' EXIT; \
@@ -122,6 +122,24 @@ test-shell:
 		-o "$$tmpdir/shell_test"; \
 	"$$tmpdir/shell_test"
 
+test-process-regions:
+	@tmpdir=$$(mktemp -d); \
+	trap 'rm -rf "$$tmpdir"' EXIT; \
+	$(CC) $(HOST_CFLAGS) -DMINIOS_PROCESS_REGION_TESTING \
+		-Itests/posix src/platform/posix/process_region.c \
+		tests/posix/process_region_integration.c \
+		-pthread -lrt -o "$$tmpdir/process_region_test"; \
+	"$$tmpdir/process_region_test"
+
+demo-process-regions:
+	@tmpdir=$$(mktemp -d); \
+	trap 'rm -rf "$$tmpdir"' EXIT; \
+	$(CC) $(HOST_CFLAGS) -DMINIOS_PROCESS_REGION_TESTING \
+		-Itests/posix src/platform/posix/process_region.c \
+		tests/posix/process_region_integration.c \
+		-pthread -lrt -o "$$tmpdir/process_region_demo"; \
+	"$$tmpdir/process_region_demo" --demo
+
 scenario:
 	@test -n "$(SCENARIO)" || { echo "Usage: make scenario SCENARIO=tests/scenarios/refuel.json" >&2; exit 2; }
 	@tmpdir=$$(mktemp -d); \
@@ -143,7 +161,8 @@ test-scenarios:
 		"$$tmpdir/libminios_scenario.so" \
 		"$(CURDIR)/tests/scenarios"
 
-test-person-b: test-mock-provider test-suggestion-policy test-scenarios test-shell
+test-person-b: test-mock-provider test-suggestion-policy test-scenarios \
+	test-shell test-process-regions
 
 minios_gui: minios_gui.c
 	@echo "Building CarPlay-style GUI simulator..."
